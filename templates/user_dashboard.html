@@ -54,14 +54,16 @@
                       
                       {% if quiz.id in scores %}
                       <p class="card-text" style="color: greenyellow;">Your Score: {{ scores[quiz.id] }}/{{quiz.questions | length}}</p>
-                      <p class="card-text">Duration: {{ quiz.time_of_quiz }} minutes</p>
+                      <p class="card-text">Time Taken: {{ quiz.time_of_quiz }} minutes</p>
+                      <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-50">Retake Quiz</a>
 
                       {% else %}
                       <p class="card-text">You have not taken this quiz yet</p>
+                      <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary">Start Quiz</a>
+
                       {% endif %}
                       
-                      <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary">Start Quiz</a>
-                  </div>
+                    </div>
               </div>
           </div>
           {% endfor %}

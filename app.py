@@ -1,6 +1,11 @@
-from flask import Flask,render_template,request,redirect,url_for,session
+from flask import Flask, flash,render_template,request,redirect,url_for,session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import os
+import matplotlib
+import matplotlib.pyplot as plt
+import seaborn as sns
+matplotlib.use('Agg')
 from werkzeug.security import generate_password_hash,check_password_hash
 def create_app():
     app=Flask(__name__)
@@ -8,6 +13,8 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///quizinfo.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
     app.config['PASSWORD_HASH']='vm123'
+    app.config['Summary_IMAGE']=os.path.join('static','summary')
+    os.makedirs(app.config['Summary_IMAGE'],exist_ok=True)
     db.init_app(app)
     return app
 
@@ -228,7 +235,12 @@ def add_quiz():
         chapter_id = request.form['chapter_id']
         name = request.form['name']
         date_of_quiz = request.form['date_of_quiz']
-        time_of_quiz = request.form['time_of_quiz']
+    try:
+        # First, try parsing the input with seconds
+        quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M:%S').time()
+    except ValueError:
+        # If seconds are not present, try parsing without seconds
+        quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time()        
         remarks = request.form['remarks']
         max_score = request.form['max_score']
         quiz = Quiz(name=name, 
@@ -246,12 +258,20 @@ def add_quiz():
 def edit_quiz(quiz_id):
     quiz = Quiz.query.get(quiz_id)
     if request.method == 'POST':
+        quiz.chapter_id = request.form['chapter_id']
         quiz.name = request.form['name']
         quiz.date_of_quiz = datetime.strptime(request.form['date_of_quiz'], '%Y-%m-%d').date()
-        quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time()
+        try:
+            # First, try parsing the input with seconds
+            quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M:%S').time()
+        except ValueError:
+            # If seconds are not present, try parsing without seconds
+            quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time()
         quiz.remarks = request.form['remarks']
         quiz.max_score = request.form['max_score']
         db.session.commit()
+        flash('Quiz updated successfully!', 'success')
+
         return redirect(url_for('quiz_management'))
     quizzes = Quiz.query.all()
     return render_template('quiz.html', quizzes=quizzes)
