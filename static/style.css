@@ -1,0 +1,128 @@
+/* Resetting margins and paddings for consistent layout */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styling with gradient background */
+body {
+    font-family: 'Arial', sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to right, #c0f89a, #92e9ff);
+    /* Beautiful gradient background */
+}
+
+/* Container that holds the login form */
+#container {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+    z-index: 2;
+    padding: 40px;
+    background: #dbdbdb;
+    /* Soft white container background */
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    /* Soft shadow to make it stand out */
+}
+
+/* Form title styles */
+#input-form h2 {
+    font-size: 32px;
+    color: #333;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Subtitle styles */
+#input-form h6 {
+    font-size: 18px;
+    color: #555;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Form label styles */
+.form-label {
+    font-weight: 500;
+    color: #444;
+}
+
+/* Input field styles */
+.form-control {
+    background-color: #f7f7f7;
+    border: 5px soid #ccc;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #2575fc;
+    box-shadow: 0 0 10px rgba(37, 117, 252, 0.3);
+    /* Soft blue glow on focus */
+    outline: none;
+}
+
+/* Tooltip or help text */
+.form-text {
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* Button styles */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background-color: #2575fc;
+    /* Deep blue color */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1e5bb8;
+    /* Darker blue on hover */
+}
+
+/* Link styling */
+a {
+    color: #2575fc;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #1e5bb8;
+    /* Darker shade on hover */
+}
+
+/* Responsive styling */
+@media (max-width: 480px) {
+    #container {
+        padding: 20px;
+    }
+
+    #input-form h2 {
+        font-size: 28px;
+    }
+
+    .form-control {
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subject and Chapter Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #c7e8ff; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
+        <div class="container-fluid">
+            <!-- Welcome Section -->
+            <span class="navbar-text fw-bold text-primary me-3">
+                Welcome, {{ username }}
+            </span>
+    
+            <!-- Navbar Toggler for Small Screens -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+    
+            <!-- Navbar Links and Buttons -->
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <!-- Left-Side Links -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active text-primary fw-bold" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-secondary" href="#">Summary</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-secondary" href="#">Button 1</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-secondary" href="#">Button 2</a>
+                    </li>
+                </ul>
+    
+                <!-- Search Bar -->
+                <form class="d-flex me-3">
+                    <input class="form-control form-control-sm rounded-pill" type="search" placeholder="Search..." aria-label="Search">
+                    <button class="btn btn-outline-primary btn-sm ms-2 rounded-pill" type="submit">Search</button>
+                </form>
+    
+                <!-- Logout Button -->
+                <a href="/login" class="btn btn-danger btn-sm rounded-pill">Logout</a>
+            </div>
+        </div>
+    </nav>
+    
+   <!-- Main Content -->
+<div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Manage Subjects and Chapters</h2>
+        <a href="/admin_dashboard" class="btn btn-warning ms-auto">Go Back to Admin Dashboard</a>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSubjectModal">Add New Subject</button>
+    </div>
+    <!-- Subjects Table -->
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Subject ID</th>
+                <th>Subject Name</th>
+                <th>Description</th>
+                <th>Code</th>
+                <th>Chapters</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subject in subjects %}
+            <tr>
+                <td>{{ subject.id }}</td>
+                <td>{{ subject.name }}</td>
+                <td>{{ subject.description }}</td>
+                <td>{{ subject.code }}</td>
+                <td>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Chapter ID</th>
+                                <th>Chapter Name</th>
+                                <th>Description</th>
+                                <!-- <th>Actions</th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for chapter in subject.chapters %}
+                            <tr>
+                                <td>{{ chapter.id }}</td>
+                                <td>{{ chapter.name }}</td>
+                                <td>{{ chapter.description }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editChapterModal-{{ chapter.id }}">Edit</button>
+
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteChapterModal-{{chapter.id }}">Delete</button>
+
+                            </tr>
+                            
+                            {% endfor %}
+                            <td>
+                                <button class="btn btn-sm btn-success mt-2" data-bs-toggle="modal" data-bs-target="#addChapterModal-{{ subject.id }}">Add Chapter</button>
+                            </td>
+                        </tbody>
+                    </table>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editSubjectModal-{{ subject.id }}">Edit Subject</button>
+                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteSubjectModal-{{ subject.id }}">Delete 
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    <!-- Add Subject Modal -->
+    <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-labelledby="addSubjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSubjectModalLabel">Add New Subject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/add_subject" method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Subject Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Code</label>
+                            <input type="text" class="form-control" id="code" name="code" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Add Subject</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Edit Subject Modal -->
+{% for subject in subjects %}
+<div class="modal fade" id="editSubjectModal-{{ subject.id }}" tabindex="-1" aria-labelledby="editSubjectModalLabel-{{ subject.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSubjectModalLabel-{{ subject.id }}">Edit {{ subject.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/edit_subject/{{ subject.id }}" method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Subject Name</label>
+                        <input type="text" class="form-control" id="edit_name_{{ subject.id }}" name="name" value="{{subject.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description_{{ subject.id }}" name="description" required>{{ subject.description }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="code" class="form-label">Code</label>
+                        <input type="text" class="form-control" id="edit_code_{{ subject.id }}" name="code" value="{{ subject.code }}" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Delete Subject Modal -->
+{% for subject in subjects %}
+<div class="modal fade" id="deleteSubjectModal-{{ subject.id }}" tabindex="-1" aria-labelledby="deleteSubjectModalLabel-{{ subject.id }}" aria-hidden="true">    
+    <div class="modal-dialog">            
+        <div class="modal-content">               
+            <div class="modal-header">                    
+                <h5 class="modal-title" id="deleteSubjectModalLabel-{{ subject.id }}">Delete {{ subject.name }}</h5>                    
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>                
+            </div>                
+            <div class="modal-body">                    
+                <h5>Are you sure to delete this subject?</h5>                    
+                <form action="/delete_subject/{{ subject.id }}" method="POST">                        
+                    <div class="d-grid gap-2">                            
+                        <button type="submit" class="btn btn-danger">Delete Subject</button>                        
+                    </div>                    
+                </form>                
+            </div>            
+        </div>        
+    </div>    
+</div>
+{% endfor %}    
+
+<!-- Add Chapter Modal -->
+{% for subject in subjects %}
+<div class="modal fade" id="addChapterModal-{{ subject.id }}" tabindex="-1" aria-labelledby="addChapterModalLabel-{{ subject.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addChapterModalLabel-{{ subject.id }}">Add New Chapter to {{ subject.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/add_chapter/{{ subject.id }}" method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Chapter Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" required></textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Add Chapter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Edit Chapter Modal -->
+{% for subject in subjects %}
+{% for chapter in subject.chapters %}
+<div class="modal fade" id="editChapterModal-{{ chapter.id }}" tabindex="-1" aria-labelledby="editChapterModalLabel-{{ chapter.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editChapterModalLabel-{{ chapter.id }}">Edit {{ chapter.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/edit_chapter/{{ chapter.id }}" method="POST">
+                    <input type="hidden" name="subject_id" value="{{ chapter.subject_id }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Chapter Name</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" value="{{ chapter.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description" name="description" required>{{ chapter.description }}</textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Edit Chapter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endfor %}
+
+<!-- Delete Chapter Modal -->
+{% for subject in subjects %}
+{% for chapter in subject.chapters %}
+<div class="modal fade" id="deleteChapterModal-{{ chapter.id }}" tabindex="-1" aria-labelledby="deleteChapterModalLabel-{{ chapter.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteChapterModalLabel-{{ chapter.id }}">Delete {{ chapter.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h5>Are you sure to delete this chapter?</h5>
+                <form action="/delete_chapter/{{ chapter.id }}" method="POST">
+                    <input type="hidden" name="subject_id" value="{{ chapter.subject_id }}">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger">Delete Chapter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endfor %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
