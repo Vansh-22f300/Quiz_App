@@ -4,74 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #f0f8ff;
+        }
+        .navbar {
+            background-color: #3498db;
+        }
+        .card {
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
 </head>
-<body style="background-color: #f8f9fa;">
+<body>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #c7e8ff; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold text-primary" href="#">Quiz Platform</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <span class="navbar-text fw-bold text-white me-3">
+                <i class="fas fa-user-circle me-2"></i>Welcome, {{ session.get('username') }}
+            </span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active text-primary fw-bold" href="#">Home</a>
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i>Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-secondary" href="/scores">Score Summary</a>
+                        <a class="nav-link" href="/scores"><i class="fas fa-chart-bar me-1"></i>Score Summary</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-secondary" href="#">Profile</a>
+                        <a class="nav-link" href="#"><i class="fas fa-user me-1"></i>Profile</a>
                     </li>
                 </ul>
-                <a href="/login" class="btn btn-danger btn-sm rounded-pill">Logout</a>
+                <a href="/login" class="btn btn-light btn-sm rounded-pill"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
             </div>
         </div>
     </nav>
 
     <!-- Page Heading -->
-    <div class="container mt-4">
-        <h1 class="text-center text-primary fw-bold">Welcome, {{ username }}</h1>
+    <div class="container mt-5">
+        <h1 class="text-center text-primary fw-bold"><i class="fas fa-user-circle me-2"></i>Welcome, {{ username }}</h1>
         <p class="text-center text-secondary">Your personalized quiz dashboard</p>
     </div>
 
     <!-- Quiz Details Section -->
-    <div class="container mt-4">
-      <h2 class="text-center text-primary fw-bold">Quiz Details</h2>
-      <div class="row">
-          {% for quiz in quizes %}
-          <div class="col-md-4 mb-4">
-              <div class="card h-100 shadow">
-                  <div class="card-body">
-                      <h5 class="card-title">Subject: {{ quiz.name }}</h5>
-                      <p class="card-text">Chapter: {{ quiz.chapter.name }}</p>
-                      <p class="card-text">{{ quiz.remarks }}</p>
-                      <p class="card-text">Date: {{ quiz.date_of_quiz }} | Time: {{ quiz.time_of_quiz }}</p>
-                      <p class="card-text">Max Score: {{ quiz.max_score }}</p>
-                      
-                      {% if quiz.id in scores %}
-                      <p class="card-text" style="color: greenyellow;">Your Score: {{ scores[quiz.id] }}/{{quiz.questions | length}}</p>
-                      <p class="card-text">Time Taken: {{ quiz.time_of_quiz }} minutes</p>
-                      <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-50">Retake Quiz</a>
-
-                      {% else %}
-                      <p class="card-text">You have not taken this quiz yet</p>
-                      <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary">Start Quiz</a>
-
-                      {% endif %}
-                      
+    <div class="container mt-5">
+        <h2 class="text-center text-primary fw-bold mb-4"><i class="fas fa-clipboard-list me-2"></i>Quiz Details</h2>
+        <div class="row">
+            {% for quiz in quizes %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary"><i class="fas fa-book me-2"></i>{{ quiz.name }}</h5>
+                        <p class="card-text"><i class="fas fa-bookmark me-2"></i>Chapter: {{ quiz.chapter.name }}</p>
+                        <p class="card-text"><i class="fas fa-comment me-2"></i>{{ quiz.remarks }}</p>
+                        <p class="card-text"><i class="far fa-calendar-alt me-2"></i>{{ quiz.date_of_quiz }} | <i class="far fa-clock me-2"></i>{{ quiz.time_of_quiz }}</p>
+                        <p class="card-text"><i class="fas fa-star me-2"></i>Max Score: {{ quiz.max_score }}</p>
+                        
+                        {% if quiz.id in scores %}
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-trophy me-2"></i>Your Score: {{ scores[quiz.id] }}/{{quiz.questions | length}}
+                        </div>
+                        <p class="card-text"><i class="fas fa-hourglass-half me-2"></i>Time Taken: {{ scores.time_taken }} minutes</p>
+                        <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-100"><i class="fas fa-redo me-2"></i>Retake Quiz</a>
+                        {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>You have not taken this quiz yet
+                        </div>
+                        <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary w-100"><i class="fas fa-play me-2"></i>Start Quiz</a>
+                        {% endif %}
                     </div>
-              </div>
-          </div>
-          {% endfor %}
-      </div>
-  </div>
-  
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 
-   
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-qbfsjWZ4VeF7PDCU2+jwOTySzKmHG9RzwRNvhBX5S34H0yG4d5P5FyRzEdWd8g4C" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

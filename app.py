@@ -13,8 +13,8 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///quizinfo.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
     app.config['PASSWORD_HASH']='vm123'
-    app.config['Summary_IMAGE']=os.path.join('static','summary')
-    os.makedirs(app.config['Summary_IMAGE'],exist_ok=True)
+    app.config['Chart_IMAGE']=os.path.join('static','charts')
+    os.makedirs(app.config['Chart_IMAGE'],exist_ok=True)
     db.init_app(app)
     return app
 
@@ -237,10 +237,10 @@ def add_quiz():
         date_of_quiz = request.form['date_of_quiz']
     try:
         # First, try parsing the input with seconds
-        quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M:%S').time()
+        time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M:%S').time()
     except ValueError:
         # If seconds are not present, try parsing without seconds
-        quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time()        
+        time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time()        
         remarks = request.form['remarks']
         max_score = request.form['max_score']
         quiz = Quiz(name=name, 
@@ -342,20 +342,58 @@ def start_quiz(quiz_id):
         score=0
         for question in questions:
             user_answer=request.form[f'question-{question.id}']
-            print(user_answer)
             if user_answer==question.answer:
                 score +=1
-                print(score)
         score=Scores(quiz_id=quiz_id,user_id=session['user_id'],time_taken=datetime.now().time(),total_score=score,)        
         db.session.add(score)
         db.session.commit()
         return redirect(url_for('user_dashboard'))
-    return render_template('start_quiz.html',quiz=quiz,questions=questions,time=time)        
+    return render_template('start_quiz.html',quiz=quiz,questions=questions,time=time) 
+       
 @app.route('/scores',methods=['GET'])
 def scores():
     if session.get('username') is None:
         return redirect(url_for('login'))
-    scores=Scores.query.all()
-    return render_template('scores.html',scores=scores)
+    scores=Scores.query.filter_by(user_id=session['user_id']).all()
+    time_taken=[score.time_taken.strftime('%H:%M:%S') for score in scores]
+    return render_template('scores.html',scores=scores,time_taken=time_taken)    
+@app.route('/admin_summary',methods=['GET','POST'])
+def admin_summary():
+    if session.get('username') != 'admin':
+        return redirect(url_for('login'))
+    Subjects_attempt=db.session.query(Subject.name,db.func.count(Scores.user_id)).join(Quiz,Scores.quiz_id==Quiz.id).join(Chapter,Quiz.chapter_id==Chapter.id).join(Subject,Chapter.subject_id==Subject.id).group_by(Subject.name).all()
+    print(Subjects_attempt)
+
+    Subject_dict=dict(Subjects_attempt)
+    top_scorer=db.session.query(Subject.name,db.func.max(Scores.total_score)).join(Quiz,Scores.quiz_id==Quiz.id).join(Chapter,Quiz.chapter_id==Chapter.id).join(Subject,Chapter.subject_id==Subject.id).group_by(Subject.name).all()
+    top_scorer_dict=dict(top_scorer)
+    pie_labels=[]
+    pie_values=[]
+    for key,value in Subject_dict.items():
+        pie_labels.append(key)
+        pie_values.append(value)
+    bar_labels=list(top_scorer_dict.keys())
+    bar_values=list(top_scorer_dict.values())
+    
+    plt.figure(figsize=(8,8))
+    sns.barplot(x=bar_labels,y=bar_values)
+    plt.xlabel('Subjects')
+    plt.ylabel('Top Score')
+    plt.title('Top Scorers')
+    bar_chart=os.path.join(app.config['Chart_IMAGE'],'bar_chart.png')
+    plt.savefig(bar_chart)
+    
+    bar_chart_url=url_for('static',filename='charts/bar_chart.png')
+    plt.figure(figsize=(8,8))
+    plt.pie(pie_values,labels=pie_labels,autopct='%1.1f%%')
+    plt.title('Subjects Attempted')
+    pie_chart=os.path.join(app.config['Chart_IMAGE'],'pie_chart.png')
+    plt.savefig(pie_chart)
+    plt.close()
+    pie_chart_url=url_for('static',filename='charts/pie_chart.png')
+    return render_template('admin_summary.html',bar_chart_url=bar_chart_url,pie_chart_url=pie_chart_url)    
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
