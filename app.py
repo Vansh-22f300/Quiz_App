@@ -2,6 +2,7 @@ from flask import Flask, flash,render_template,request,redirect,url_for,session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
+import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -383,6 +384,7 @@ def admin_summary():
     bar_chart=os.path.join(app.config['Chart_IMAGE'],'bar_chart.png')
     plt.savefig(bar_chart)
     
+    
     bar_chart_url=url_for('static',filename='charts/bar_chart.png')
     plt.figure(figsize=(8,8))
     plt.pie(pie_values,labels=pie_labels,autopct='%1.1f%%')
@@ -391,9 +393,28 @@ def admin_summary():
     plt.savefig(pie_chart)
     plt.close()
     pie_chart_url=url_for('static',filename='charts/pie_chart.png')
-    return render_template('admin_summary.html',bar_chart_url=bar_chart_url,pie_chart_url=pie_chart_url)    
+    
+    avg_scores = db.session.query(Subject.name, db.func.avg(Scores.total_score)) \
+        .join(Quiz, Scores.quiz_id == Quiz.id) \
+        .join(Chapter, Quiz.chapter_id == Chapter.id) \
+        .join(Subject, Chapter.subject_id == Subject.id) \
+        .group_by(Subject.name).all()
+    line_labels=[]
+    line_values=[]
+    for avg_score in avg_scores:
+        line_labels.append(avg_score[0])  # Subject name
+        line_values.append(avg_score[1])  # Average score
 
-
+    plt.figure(figsize=(8,8))
+    sns.lineplot(x=line_labels,y=line_values)
+    plt.xlabel('Subjects')
+    plt.ylabel('Average Score')
+    plt.title('Average Scores')
+    line_chart=os.path.join(app.config['Chart_IMAGE'],'line_chart.png')
+    plt.savefig(line_chart)
+    plt.close()
+    line_chart_url=url_for('static',filename='charts/line_chart.png')
+    return render_template('admin_summary.html',bar_chart_url=bar_chart_url,pie_chart_url=pie_chart_url,line_chart_url=line_chart_url)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,21 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Summary</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <h1 class="text-center">Admin Summary</h1>
-        <div class="row">
+
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="text-center mb-4">
+            <h1 class="display-5 text-primary">Admin Summary</h1>
+            <p class="text-muted">Overview of top scorers and subjects attempted</p>
+        </div>
+        <div class="row g-4">
             <div class="col-md-6">
-                <img src="{{ bar_chart_url }}" class="img-fluid" alt="Top Scorers">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h5 class="mb-0">Top Scorers</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="{{ bar_chart_url }}" class="img-fluid rounded" alt="Top Scorers">
+                    </div>
+                </div>
             </div>
             <div class="col-md-6">
-                <img src="{{ pie_chart_url }}" class="img-fluid" alt="Subjects Attempted">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-success text-white text-center">
+                        <h5 class="mb-0">Subjects Attempted</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="{{ pie_chart_url }}" class="img-fluid rounded" alt="Subjects Attempted">
+                    </div>
+                </div>
             </div>
+            <div class="col-md-6">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-warning text-white text-center">
+                        <h5 class="mb-0">Average Scores</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="{{ line_chart_url }}" class="img-fluid rounded" alt="Average Scores">
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
