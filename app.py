@@ -415,6 +415,21 @@ def admin_summary():
     plt.close()
     line_chart_url=url_for('static',filename='charts/line_chart.png')
     return render_template('admin_summary.html',bar_chart_url=bar_chart_url,pie_chart_url=pie_chart_url,line_chart_url=line_chart_url)
-
+@app.route('/profile',methods=['GET','POST'])
+def profile():
+    if session.get('username') is None:
+        return redirect(url_for('login'))
+    user=User.query.get(session['user_id'])
+    if request.method=='POST':
+        user.full_name=request.form['full_name']
+        user.qualification=request.form['qualification']
+        user.dob=datetime.strptime(request.form['dob'],'%Y-%m-%d').date()
+        user.gender=request.form['gender']
+        user.email=request.form['email']
+        user.phone=request.form['phone']
+        user.address=request.form['address']
+        db.session.commit()
+        return redirect(url_for('profile'))
+    return render_template('profile.html',user=user)
 if __name__ == '__main__':
     app.run(debug=True)
