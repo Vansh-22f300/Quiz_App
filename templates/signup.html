@@ -1,53 +1,106 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #74b9ff, #a29bfe);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-control {
+            border-radius: 10px;
+        }
+
+        .btn-custom {
+            background-color: #2d66f7;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .btn-custom:hover {
+            background-color: #a89aff;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="container">
-        <div id="panel">
-            <div id="input-form">
-                <h2>Sign up</h2>
-                <form method="POST" action="/signup">
-                    <label for="full_name" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" name="full_name" id="full_name" required><br>
-                    
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" name="username" id="username" required><br>
-                    
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" id="email" required><br>
-                    
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" name="password" id="password" required><br>
-                    
-                    <label for="dob" class="form-label">Date of Birth</label>
-                    <input type="date" class="form-control" name="dob" id="dob" required><br>
-                    
-                    <label for="gender" class="form-label">Gender</label>
-                    <select class="form-control" name="gender" id="gender" required>
-                        <option value="" disabled selected>Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                        <option value="Prefer Not to Say">Prefer Not to Say</option>
-                    </select><br>
-                    
-                    <label for="qualification" class="form-label">Qualification</label>
-                    <input type="text" class="form-control" name="qualification" id="qualification" required><br>
-                    
-                    <label for="phone" class="form-label">Phone</label>
-                    <input type="text" class="form-control" name="phone" id="phone" required><br>
-                    
-                    <label for="address" class="form-label">Address</label>
-                    <input type="text" class="form-control" name="address" id="address" required><br>
-                                        
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-4">
+                    <h2 class="text-center text-primary mb-3">Sign Up</h2>
+                    <form method="POST" action="/signup">
+                        
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="full_name" id="full_name" required>
+                        </div>
 
-                    <button type="submit" class="btn btn-primary">Sign up</button>
-                </form>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" id="username" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" id="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" id="password" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="dob" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" name="dob" id="dob" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select" name="gender" id="gender" required>
+                                <option value="" disabled selected>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                                <option value="Prefer Not to Say">Prefer Not to Say</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="qualification" class="form-label">Qualification</label>
+                            <input type="text" class="form-control" name="qualification" id="qualification" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="text" class="form-control" name="phone" id="phone" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <input type="text" class="form-control" name="address" id="address" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-custom">Sign Up</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

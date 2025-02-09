@@ -34,7 +34,7 @@ class User(db.Model):
     email = db.Column(db.String(150), nullable=False, unique=True)  # New field for email
     phone = db.Column(db.String(15), nullable=False)  # New field for phone number
     address = db.Column(db.String(255), nullable=False)  # New field for address
-    status=db.Column(db.Boolean,default=True)
+    status=db.Column(db.String(50),default=True)
     created_on=db.Column(db.DateTime,nullable=False,default=datetime.utcnow)
     
     scores=db.relationship('Scores',back_populates='user')
@@ -125,9 +125,11 @@ def login():
             if user.username=='admin':
                 session['username']='admin'
                 return redirect(url_for('admin_dashboard'))
-            if user.status:
-                session['username']=user.username
-                session['user_id']=user.id
+            if user.status=='Inactive':
+                flash('Your account is blocked','danger')
+                return redirect(url_for('login'))
+            session['username']=user.username
+            session['user_id']=user.id    
             return redirect(url_for('user_dashboard'))
         else:
             return redirect(url_for('login'))
@@ -149,7 +151,60 @@ def user_dashboard():
     scores_dict = {score.quiz_id: score.total_score for score in scores}
     return render_template('user_dashboard.html', quizes=quizzes, scores=scores_dict)
 
+@app.route('/manage_users',methods=['GET','POST'])
+def manage_users():
+    if session.get('username') != 'admin':
+        return redirect(url_for('login'))
+    users=User.query.filter(User.username!='admin').all()
+    return render_template('manage_user.html',users=users)
+@app.route('/search_user', methods=['GET'])
+def search_user():
+    query_username = request.args.get('user_username', '').strip()
+    query_full_name = request.args.get('user_full_name', '').strip()
+    query_status = request.args.get('user_status', '').strip()
 
+    users_query = User.query.filter(User.username != 'admin')  # Exclude admin users
+    
+    if query_username:
+        users_query = users_query.filter(User.username.contains(query_username))
+    if query_full_name:
+        users_query = users_query.filter(User.full_name.contains(query_full_name))
+    if query_status:
+        users_query = users_query.filter(User.status.contains(query_status))
+    
+    users = users_query.all()
+
+    return render_template('manage_user.html', users=users)
+
+@app.route('/block_user/<int:user_id>', methods=['GET', 'POST'])
+def block_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash('User not found!', 'danger')
+        return redirect(url_for('manage_users'))
+    
+    if user.status != "Inactive":  # Assuming status is a string field
+        user.status = "Inactive"
+        db.session.commit()
+        flash('User has been blocked successfully!', 'success')
+        return redirect(url_for('manage_users'))
+    
+    return redirect(url_for('manage_users'))
+
+@app.route('/unblock_user/<int:user_id>', methods=['GET', 'POST'])
+def unblock_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash('User not found!', 'danger')
+        return redirect(url_for('manage_users'))
+    
+    if user.status != "Active":  # Assuming status is a string field
+        user.status = "Active"
+        db.session.commit()
+        flash('User has been unblocked successfully!', 'success')
+        return redirect(url_for('manage_users'))
+    
+    return redirect(url_for('manage_users'))
 # signup route
 @app.route('/signup',methods=['GET','POST'])
 def signup():
@@ -202,7 +257,23 @@ def delete_subject(subject_id):
     subject=Subject.query.get(subject_id)
     db.session.delete(subject)
     db.session.commit()
-    return redirect(url_for('subjects_management'))       
+    return redirect(url_for('subjects_management'))      
+@app.route('/search_subject', methods=['GET'])
+def search_subject():
+    query_name = request.args.get('subject_name', '').strip()
+    query_code = request.args.get('subject_code', '').strip()
+
+    subjects_query = Subject.query  # Start with the base query
+    
+    if query_name:
+        subjects_query = subjects_query.filter(Subject.name.contains(query_name))
+    if query_code:
+        subjects_query = subjects_query.filter(Subject.code.contains(query_code))
+    
+    subjects = subjects_query.all()
+
+    return render_template('subject.html', subjects=subjects)
+
 @app.route('/add_chapter/<int:subject_id>', methods=['GET', 'POST'])
 def add_chapter(subject_id):
     subject = Subject.query.get(subject_id)
@@ -282,10 +353,18 @@ def delete_quiz(quiz_id):
     db.session.delete(quiz)
     db.session.commit()
     return redirect(url_for('quiz_management'))
-
+@app.route('/search_quiz', methods=['GET'])
+def search_quiz():
+    query = request.args.get('quiz_name')
+    if query:
+        quizzes = Quiz.query.filter(Quiz.name.contains(query)).all()
+    else:
+        quizzes = Quiz.query.all()
+    return render_template('quiz.html', quizzes=quizzes)
 @app.route('/add_question/<int:quiz_id>', methods=['GET', 'POST'])
 def add_question(quiz_id):
     if request.method == 'POST':
+        quiz_id = request.form['quiz_id']
         name = request.form['name']
         question_statement = request.form['question_statement']
         option1 = request.form['option1']
