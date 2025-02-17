@@ -73,7 +73,7 @@ class Quiz(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.String(150),nullable=False)
     date_of_quiz=db.Column(db.Date,nullable=False)
-    time_of_quiz=db.Column(db.Time,nullable=False)
+    time_of_quiz=db.Column(db.Integer,nullable=False)
     remarks=db.Column(db.Text,nullable=False)
     max_score = db.Column(db.Integer, nullable=True)  # New field for the maximum possible score
 
@@ -147,6 +147,7 @@ def user_dashboard():
         return redirect(url_for('login'))
     user_id = session['user_id']
     quizzes = Quiz.query.all()
+    
     scores = Scores.query.filter_by(user_id=user_id).all()
     scores_dict = {score.quiz_id: score.total_score for score in scores}
     return render_template('user_dashboard.html', quizes=quizzes, scores=scores_dict)
@@ -306,47 +307,61 @@ def add_quiz():
     if request.method == 'POST':
         chapter_id = request.form['chapter_id']
         name = request.form['name']
-        date_of_quiz = request.form['date_of_quiz']
-    try:
-        # First, try parsing the input with seconds
-        time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M:%S').time()
-    except ValueError:
-        # If seconds are not present, try parsing without seconds
-        time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time()        
+        date_of_quiz = datetime.strptime(request.form['date_of_quiz'], '%Y-%m-%d').date()
+        
+        try:
+            time_of_quiz = int(request.form['time_of_quiz'])  # Expect duration in minutes
+        except ValueError:
+            flash("Invalid quiz duration. Please enter a number in minutes.", "error")
+            return redirect(url_for('add_quiz'))
+
         remarks = request.form['remarks']
         max_score = request.form['max_score']
-        quiz = Quiz(name=name, 
-                    date_of_quiz = datetime.strptime(request.form['date_of_quiz'], '%Y-%m-%d').date(),
-                    time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time(),
-                    remarks=remarks, 
-                    max_score=max_score, 
-                    chapter_id=chapter_id)
+
+        quiz = Quiz(
+            name=name,
+            date_of_quiz=date_of_quiz,
+            time_of_quiz=time_of_quiz,  # Store duration
+            remarks=remarks,
+            max_score=max_score,
+            chapter_id=chapter_id
+        )
+
         db.session.add(quiz)
         db.session.commit()
-        return redirect(url_for('quiz_management'))    
+        return redirect(url_for('quiz_management'))
+
     return render_template('quiz.html', quizzes=[])
+
 
 @app.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 def edit_quiz(quiz_id):
     quiz = Quiz.query.get(quiz_id)
+    if not quiz:
+        flash('Quiz not found!', 'error')
+        return redirect(url_for('quiz_management'))
+
     if request.method == 'POST':
         quiz.chapter_id = request.form['chapter_id']
         quiz.name = request.form['name']
         quiz.date_of_quiz = datetime.strptime(request.form['date_of_quiz'], '%Y-%m-%d').date()
+
         try:
-            # First, try parsing the input with seconds
-            quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M:%S').time()
+            quiz.time_of_quiz = int(request.form['time_of_quiz'])  # Expect duration in minutes
         except ValueError:
-            # If seconds are not present, try parsing without seconds
-            quiz.time_of_quiz = datetime.strptime(request.form['time_of_quiz'], '%H:%M').time()
+            flash("Invalid quiz duration. Please enter a number in minutes.", "error")
+            return redirect(url_for('edit_quiz', quiz_id=quiz.id))
+
         quiz.remarks = request.form['remarks']
         quiz.max_score = request.form['max_score']
+
         db.session.commit()
         flash('Quiz updated successfully!', 'success')
-
         return redirect(url_for('quiz_management'))
+
     quizzes = Quiz.query.all()
-    return render_template('quiz.html', quizzes=quizzes)
+    return render_template('quiz.html', quizzes=quizzes, quiz=quiz)
+
 @app.route('/delete_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 def delete_quiz(quiz_id):
     quiz = Quiz.query.get(quiz_id)
@@ -417,7 +432,7 @@ def start_quiz(quiz_id):
         return redirect(url_for('login'))
     quiz=Quiz.query.get(quiz_id)
     questions=Question.query.filter_by(quiz_id=quiz_id).all()
-    time=quiz.time_of_quiz.hour * 3600 + quiz.time_of_quiz.minute * 60 + quiz.time_of_quiz.second
+    time = quiz.time_of_quiz * 60  # Convert minutes to seconds
     if request.method == 'POST':
         score=0
         for question in questions:
@@ -435,7 +450,7 @@ def scores():
     if session.get('username') is None:
         return redirect(url_for('login'))
     scores=Scores.query.filter_by(user_id=session['user_id']).all()
-    time_taken=[score.time_taken.strftime('%H:%M:%S') for score in scores]
+    time_taken=[score.time_taken for score in scores]
     return render_template('scores.html',scores=scores,time_taken=time_taken)    
 @app.route('/admin_summary',methods=['GET','POST'])
 def admin_summary():

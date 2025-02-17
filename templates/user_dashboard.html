@@ -46,11 +46,12 @@
                         <a class="nav-link" href="/scores"><i class="fas fa-chart-bar me-1"></i>Summary</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-cog me-1"></i>Settings</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="#"><i class="fas fa-bell me-1"></i>Notifications</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile"><i class="fas fa-user me-1"></i>Profile</a>
+                    </li>
+                    
                 </ul>
 
                 <!-- Search Bar -->
@@ -84,14 +85,14 @@
                         <h5 class="card-title text-primary"><i class="fas fa-book me-2"></i>{{ quiz.name }}</h5>
                         <p class="card-text"><i class="fas fa-bookmark me-2"></i>Chapter: {{ quiz.chapter.name }}</p>
                         <p class="card-text"><i class="fas fa-comment me-2"></i>{{ quiz.remarks }}</p>
-                        <p class="card-text"><i class="far fa-calendar-alt me-2"></i>{{ quiz.date_of_quiz }} | <i class="far fa-clock me-2"></i>{{ quiz.time_of_quiz }}</p>
+                        <p class="card-text"><i class="far fa-calendar-alt me-2"></i>{{ quiz.date_of_quiz }} | <i class="far fa-clock me-2"></i>{{ quiz.time_of_quiz }} Minutes</p>
                         <p class="card-text"><i class="fas fa-star me-2"></i>Max Score: {{ quiz.max_score }}</p>
                         
                         {% if quiz.id in scores %}
                         <div class="alert alert-success" role="alert">
                             <i class="fas fa-trophy me-2"></i>Your Score: {{ scores[quiz.id] }}/{{quiz.questions | length}}
                         </div>
-                        <p class="card-text"><i class="fas fa-hourglass-half me-2"></i>Time Taken: {{ scores.time_taken }} minutes</p>
+                        <p class="card-text"><i class="fas fa-hourglass-half me-2"></i>Time Taken : {{ scores[quiz.id].time_taken }} minutes</p>
                         <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-100"><i class="fas fa-redo me-2"></i>Retake Quiz</a>
                         {% else %}
                         <div class="alert alert-info" role="alert">
