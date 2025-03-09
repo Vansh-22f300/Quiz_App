@@ -34,7 +34,7 @@ class User(db.Model):
     email = db.Column(db.String(150), nullable=False, unique=True)  # New field for email
     phone = db.Column(db.String(15), nullable=False)  # New field for phone number
     address = db.Column(db.String(255), nullable=False)  # New field for address
-    status=db.Column(db.String(50),default=True)
+    status=db.Column(db.String(50),default=Active)
     created_on=db.Column(db.DateTime,nullable=False,default=datetime.utcnow)
     
     scores=db.relationship('Scores',back_populates='user')
