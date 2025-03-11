@@ -37,8 +37,7 @@ class User(db.Model):
     status=db.Column(db.String(50),default='Active')
     created_on=db.Column(db.DateTime,nullable=False,default=datetime.utcnow)
     
-    scores=db.relationship('Scores',back_populates='user')
-    #backpopulates is used to get the data from the other table
+    scores=db.relationship('Scores',back_populates='user',cascade='all,delete')
 
 class Subject(db.Model):
     id=db.Column(db.Integer,primary_key=True)
@@ -207,22 +206,46 @@ def unblock_user(user_id):
     
     return redirect(url_for('manage_users'))
 # signup route
-@app.route('/signup',methods=['GET','POST'])
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method=='POST':
-        username=request.form['username']
-        password=request.form['password']
-        full_name=request.form['full_name']
-        qualification=request.form['qualification']
-        dob=request.form['dob']
-        gender=request.form['gender']
-        email=request.form['email']
-        phone=request.form['phone']
-        address=request.form['address']
-        user=User(username=username,password=generate_password_hash(password),full_name=full_name,qualification=qualification,dob=datetime.strptime(dob,'%Y-%m-%d').date(),gender=gender,email=email,phone=phone,address=address)
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        full_name = request.form['full_name']
+        qualification = request.form['qualification']
+        dob = request.form['dob']
+        gender = request.form['gender']
+        email = request.form['email']
+        phone = request.form['phone']
+        address = request.form['address']
+
+        # Check if email or username already exists
+        if User.query.filter_by(email=email).first():
+            flash("Email already registered. Please use a different email.", "danger")
+            return redirect(url_for('signup'))
+
+        if User.query.filter_by(username=username).first():
+            flash("Username already taken. Please choose a different username.", "danger")
+            return redirect(url_for('signup'))
+
+        # If no duplicates, create and insert the user
+        user = User(
+            username=username,
+            password=generate_password_hash(password),
+            full_name=full_name,
+            qualification=qualification,
+            dob=datetime.strptime(dob, '%Y-%m-%d').date(),
+            gender=gender,
+            email=email,
+            phone=phone,
+            address=address
+        )
+
         db.session.add(user)
         db.session.commit()
+        flash("Signup successful! Please login.", "success")
         return redirect(url_for('login'))
+
     return render_template('signup.html')
 
 @app.route('/subjects_management',methods=['GET','POST'])
@@ -525,5 +548,22 @@ def profile():
         db.session.commit()
         return redirect(url_for('profile'))
     return render_template('profile.html',user=user)
+
+@app.route('/edit_profile',methods=['GET','POST'])
+def edit_profile():
+    if session.get('username') is None:
+        return redirect(url_for('login'))
+    user=User.query.get(session['user_id'])
+    if request.method=='POST':
+        user.full_name=request.form['full_name']
+        user.qualification=request.form['qualification']
+        user.dob=datetime.strptime(request.form['dob'],'%Y-%m-%d').date()
+        user.gender=request.form['gender']
+        user.email=request.form['email']
+        user.phone=request.form['phone']
+        user.address=request.form['address']
+        db.session.commit()
+        return redirect(url_for('profile'))
+    return render_template('edit_profile.html',user=user)
 if __name__ == '__main__':
     app.run(debug=True)
