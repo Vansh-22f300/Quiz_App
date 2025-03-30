@@ -6,38 +6,18 @@
     <title>User Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        body {
-            background-color: #f0f8ff;
-        }
-        .navbar {
-            background-color: #3498db;
-        }
-        .card {
-            transition: transform 0.3s;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-        }
-    </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <!-- Welcome Section -->
             <span class="navbar-text fw-bold text-white me-3">
                 <i class="fas fa-user-circle me-2"></i>Welcome, {{ session.get('username') }}
             </span>
-
-            <!-- Navbar Toggler for Small Screens -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
-            <!-- Navbar Links and Buttons -->
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <!-- Left-Side Links -->
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link active" href="/user_dashboard"><i class="fas fa-home me-1"></i>Home</a>
@@ -46,23 +26,15 @@
                         <a class="nav-link" href="/scores"><i class="fas fa-chart-bar me-1"></i>Summary</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="fas fa-bell me-1"></i>Notifications</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="/profile"><i class="fas fa-user me-1"></i>Profile</a>
                     </li>
-                    
                 </ul>
-
-                <!-- Search Bar -->
-                <form class="d-flex me-3">
+                <form class="d-flex me-3" method="GET" action="/search_user_quiz">
                     <div class="input-group">
-                        <input class="form-control" type="search" placeholder="Search..." aria-label="Search">
+                        <input class="form-control" type="search" name="quiz_name" placeholder="Search quiz..." aria-label="Search" value="{{ search_query }}">
                         <button class="btn btn-light" type="submit"><i class="fas fa-search"></i></button>
                     </div>
                 </form>
-
-                <!-- Logout Button -->
                 <a href="/login" class="btn btn-outline-light"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
             </div>
         </div>
@@ -75,37 +47,42 @@
     </div>
 
     <!-- Quiz Details Section -->
-    <div class="container mt-5">
-        <h2 class="text-center text-primary fw-bold mb-4"><i class="fas fa-clipboard-list me-2"></i>Quiz Details</h2>
-        <div class="row">
-            {% for quiz in quizes %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow">
-                    <div class="card-body">
-                        <h5 class="card-title text-primary"><i class="fas fa-book me-2"></i>{{ quiz.name }}</h5>
-                        <p class="card-text"><i class="fas fa-bookmark me-2"></i>Chapter: {{ quiz.chapter.name }}</p>
-                        <p class="card-text"><i class="fas fa-comment me-2"></i>{{ quiz.remarks }}</p>
-                        <p class="card-text"><i class="far fa-calendar-alt me-2"></i>{{ quiz.date_of_quiz }} | <i class="far fa-clock me-2"></i>{{ quiz.time_of_quiz }} Minutes</p>
-                        <p class="card-text"><i class="fas fa-star me-2"></i>Max Score: {{ quiz.max_score }}</p>
-                        
-                        {% if quiz.id in scores %}
-                        <div class="alert alert-success" role="alert">
-                            <i class="fas fa-trophy me-2"></i>Your Score: {{ scores[quiz.id] }}/{{quiz.questions | length}}
-                        </div>
-                        <p class="card-text"><i class="fas fa-hourglass-half me-2"></i>Time Taken : {{ scores[quiz.id].time_taken }} minutes</p>
-                        <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-100"><i class="fas fa-redo me-2"></i>Retake Quiz</a>
-                        {% else %}
-                        <div class="alert alert-info" role="alert">
-                            <i class="fas fa-info-circle me-2"></i>You have not taken this quiz yet
-                        </div>
-                        <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary w-100"><i class="fas fa-play me-2"></i>Start Quiz</a>
-                        {% endif %}
+<div class="container mt-5">
+    <h2 class="text-center text-primary fw-bold mb-4"><i class="fas fa-clipboard-list me-2"></i>Quiz Details</h2>
+    {% if quizes %}
+    <div class="row">
+        {% for quiz in quizes %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-book me-2"></i>{{ quiz.name }}</h5>
+                    <p class="card-text"><i class="fas fa-bookmark me-2"></i>Chapter: {{ quiz.chapter.name }}</p>
+                    <p class="card-text"><i class="fas fa-comment me-2"></i>{{ quiz.remarks }}</p>
+                    <p class="card-text"><i class="far fa-calendar-alt me-2"></i>{{ quiz.date_of_quiz }} | <i class="far fa-clock me-2"></i>{{ quiz.time_of_quiz }} Minutes</p>
+                    {% if quiz.id in scores %}
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-trophy me-2"></i>Your Score: {{ scores[quiz.id] if scores[quiz.id] is not none else 'N/A' }}/{{quiz.questions | length}}
                     </div>
+                    
+                    <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-100"><i class="fas fa-redo me-2"></i>Retake Quiz</a>
+                    {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>You have not taken this quiz yet
+                    </div>
+                    <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary w-100"><i class="fas fa-play me-2"></i>Start Quiz</a>
+                    {% endif %}
                 </div>
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        <i class="fas fa-exclamation-circle me-2"></i>No quizzes found for "{{ search_query }}"
+    </div>
+    {% endif %}
+</div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

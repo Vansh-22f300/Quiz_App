@@ -12,12 +12,28 @@
 </head>
 
 <body>
-  <img src="https://img.freepik.com/free-psd/3d-rendering-questions-background_23-2151455632.jpg" alt="Quiz"
+    
+  <img src="https://imgs.search.brave.com/RruH0RjnRiZn6G0KQ9hWruL9ksddZfiUfnjmSzhs79M/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzA1LzcxLzIxLzkz/LzM2MF9GXzU3MTIx/OTM4Nl93SVEyd0Fv/N2JwR1F1a1ZKWEFa/U0x0ZHNhaHR3Q1J5/Ry5qcGc" alt="Quiz"
     style="width: 100%; height: 100%; position: absolute; z-index: -1;">
   <div id="container">
     <div id="panel">
       <div id="input-form">
         <h2>Quiz Services</h2>
+          <!-- Flash Messages at the Top -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="position-fixed w-100 top-0 start-0 z-3">
+          <div class="container mt-3">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show text-center" role="alert">
+                <strong>{{ message }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+      {% endwith %}
         <h6>Welcome User</h6>
         <form method="POST" action="/login">
           <label for="username" class="form-label">Username</label>

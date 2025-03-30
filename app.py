@@ -64,7 +64,7 @@ class Question(db.Model):
     option3=db.Column(db.String(150),nullable=False)
     option4=db.Column(db.String(150),nullable=False)
     answer=db.Column(db.String(150),nullable=False)
-    quiz_id=db.Column(db.Integer,db.ForeignKey('quiz.id'),nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id', ondelete="CASCADE"), nullable=False)
     
     quiz=db.relationship('Quiz',back_populates='questions')
     
@@ -74,24 +74,17 @@ class Quiz(db.Model):
     date_of_quiz=db.Column(db.Date,nullable=False)
     time_of_quiz=db.Column(db.Integer,nullable=False)
     remarks=db.Column(db.Text,nullable=False)
-    max_score = db.Column(db.Integer, nullable=True)  # New field for the maximum possible score
-
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapter.id'), nullable=False)   
-     
-    questions=db.relationship('Question',back_populates='quiz',cascade='all,delete')
-    scores=db.relationship('Scores',back_populates='quiz',cascade='all,delete')
+    questions = db.relationship('Question', back_populates='quiz', cascade="all, delete")
+    scores = db.relationship('Scores', back_populates='quiz', cascade="all, delete")
     chapter=db.relationship('Chapter',back_populates='quizzes')
 
 class Scores(db.Model):
     id=db.Column(db.Integer,primary_key=True)
-    quiz_id=db.Column(db.Integer,db.ForeignKey('quiz.id'),nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id', ondelete="CASCADE"), nullable=False)
     user_id=db.Column(db.Integer,db.ForeignKey('user.id'),nullable=False)
     time_taken=db.Column(db.Time,nullable=False)
-    total_score=db.Column(db.Integer,nullable=False)
-    feedback = db.Column(db.Text, nullable=True)  # New field for user feedback after quiz completion
-
-   # complemeted=db.Column(db.Boolean,default=False)
-   
+    total_score=db.Column(db.Integer,nullable=False)   
     user=db.relationship('User',back_populates='scores')
     quiz=db.relationship('Quiz',back_populates='scores')
     
@@ -325,6 +318,8 @@ def delete_chapter(chapter_id):
     db.session.delete(chapter)
     db.session.commit()
     return redirect(url_for('subjects_management'))
+
+
 @app.route('/add_quiz', methods=['GET', 'POST'])
 def add_quiz():
     if request.method == 'POST':
@@ -339,14 +334,12 @@ def add_quiz():
             return redirect(url_for('add_quiz'))
 
         remarks = request.form['remarks']
-        max_score = request.form['max_score']
 
         quiz = Quiz(
             name=name,
             date_of_quiz=date_of_quiz,
-            time_of_quiz=time_of_quiz,  # Store duration
+            time_of_quiz=time_of_quiz, 
             remarks=remarks,
-            max_score=max_score,
             chapter_id=chapter_id
         )
 
@@ -355,7 +348,6 @@ def add_quiz():
         return redirect(url_for('quiz_management'))
 
     return render_template('quiz.html', quizzes=[])
-
 
 @app.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 def edit_quiz(quiz_id):
@@ -376,7 +368,6 @@ def edit_quiz(quiz_id):
             return redirect(url_for('edit_quiz', quiz_id=quiz.id))
 
         quiz.remarks = request.form['remarks']
-        quiz.max_score = request.form['max_score']
 
         db.session.commit()
         flash('Quiz updated successfully!', 'success')
@@ -399,6 +390,18 @@ def search_quiz():
     else:
         quizzes = Quiz.query.all()
     return render_template('quiz.html', quizzes=quizzes)
+@app.route('/search_user_quiz', methods=['GET'])
+def search_user_quiz():
+    query = request.args.get('quiz_name', '').strip()
+
+    # If a query is provided, filter quizzes, else return all quizzes
+    if query:
+        quizzes = Quiz.query.filter(Quiz.name.ilike(f"%{query}%")).all()
+    else:
+        quizzes = Quiz.query.all()
+
+    return render_template('user_dashboard.html', quizes=quizzes, search_query=query)
+
 @app.route('/add_question/<int:quiz_id>', methods=['GET', 'POST'])
 def add_question(quiz_id):
     if request.method == 'POST':
