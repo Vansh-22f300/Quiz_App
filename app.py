@@ -568,5 +568,6 @@ def edit_profile():
         db.session.commit()
         return redirect(url_for('profile'))
     return render_template('edit_profile.html',user=user)
-if __name__ == '__main__':
-    app.run(host='0.0.0.0' ,debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Render sets the PORT env variable
+    app.run(host="0.0.0.0", port=port)
