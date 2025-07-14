@@ -83,7 +83,6 @@ class Scores(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id', ondelete="CASCADE"), nullable=False)
     user_id=db.Column(db.Integer,db.ForeignKey('user.id'),nullable=False)
-    date_taken=db.Column(db.Date,nullable=False)
     time_taken=db.Column(db.Time,nullable=False)
     total_score=db.Column(db.Integer,nullable=False)   
     user=db.relationship('User',back_populates='scores')
@@ -477,11 +476,8 @@ def scores():
     if session.get('username') is None:
         return redirect(url_for('login'))
     scores=Scores.query.filter_by(user_id=session['user_id']).all()
-    date_taken=[score.date_taken.strftime('%Y-%m-%d') for score in scores]
-    scores.sort(key=lambda x: x.date_taken, reverse=True)  # Sort scores by date_taken in descending order
-    time_taken=[score.time_taken.strftime('%H:%M:%S') for score in scores]
-    scores = sorted(scores, key=lambda x: x.date_taken, reverse=True)  # Sort scores by date_taken in descending order
-    return render_template('scores.html',scores=scores,date_taken=date_taken,time_taken=time_taken)    
+    time_taken=[score.time_taken for score in scores]
+    return render_template('scores.html',scores=scores,time_taken=time_taken)    
 @app.route('/admin_summary',methods=['GET','POST'])
 def admin_summary():
     if session.get('username') != 'admin':

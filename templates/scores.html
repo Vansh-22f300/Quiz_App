@@ -48,7 +48,6 @@
                         <th><i class="fas fa-hashtag me-2"></i>Quiz ID</th>
                         <th><i class="fas fa-book me-2"></i>Quiz Name</th>
                         <th><i class="fas fa-star me-2"></i>Score</th>
-                        <th><i class="fas fa-calendar me-2"></i>Date Taken</th>
                         <th><i class="fas fa-clock me-2"></i>Time Taken</th>
                     </tr>
                 </thead>
@@ -58,8 +57,7 @@
                         <td>{{ score.quiz.id }}</td>
                         <td>{{ score.quiz.name }}</td>
                         <td><span class="badge bg-success">{{ score.total_score }}</span></td>
-                        <td>{{ score.date_taken }}</td>
-                        <td>{{ score.time_taken }} hours</td>
+                        <td>{{ score.time_taken }} mins</td>
                     </tr>
                     {% endfor %}
                 </tbody>
