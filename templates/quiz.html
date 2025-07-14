@@ -351,11 +351,12 @@
                         <div class="mb-3">
                             <label for="answer-{{ question.id }}" class="form-label">Correct Answer</label>
                             <select class="form-select" id="answer-{{ question.id }}" name="answer" required>
-                                <option value="option1" {% if question.answer == 'option1' %}selected{% endif %}>Option 1</option>
-                                <option value="option2" {% if question.answer == 'option2' %}selected{% endif %}>Option 2</option>
-                                <option value="option3" {% if question.answer == 'option3' %}selected{% endif %}>Option 3</option>
-                                <option value="option4" {% if question.answer == 'option4' %}selected{% endif %}>Option 4</option>
+                                <option value="1" {% if question.answer == '1' %}selected{% endif %}>1</option>
+                                <option value="2" {% if question.answer == '2' %}selected{% endif %}>2</option>
+                                <option value="3" {% if question.answer == '3' %}selected{% endif %}>3</option>
+                                <option value="4" {% if question.answer == '4' %}selected{% endif %}>4</option>
                             </select>
+
                         </div>
                         
                         <div class="d-grid gap-2">
