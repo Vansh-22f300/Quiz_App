@@ -569,4 +569,4 @@ def edit_profile():
         return redirect(url_for('profile'))
     return render_template('edit_profile.html',user=user)
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0' ,debug=True)
