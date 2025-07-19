@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Rapid Fire Quiz</title>
+</head>
+<body>
+  <h2>AI Rapid Fire Quiz</h2>
+
+  {% if error %}
+    <p style="color: red;">{{ error }}</p>
+  {% else %}
+    <form method="post" action="/submit-ai-quiz">
+      {% for q in questions %}
+        <p><b>{{ loop.index }}. {{ q.question }}</b></p>
+        {% for opt in q.options %}
+          <label><input type="radio" name="q{{ loop.index }}" value="{{ opt }}"> {{ opt }}</label><br>
+        {% endfor %}
+        <hr>
+      {% endfor %}
+      <button type="submit">Submit</button>
+    </form>
+  {% endif %}
+</body>
+</html>

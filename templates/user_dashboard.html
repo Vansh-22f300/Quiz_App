@@ -6,6 +6,204 @@
     <title>User Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            position: relative; /* Essential for fixed chatbot positioning */
+            min-height: 100vh; /* Ensure body takes full height */
+        }
+        /* Main content container styling - Bootstrap's .container handles width and centering */
+        .container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 20px; /* Add some top margin to clear the navbar */
+            margin-bottom: 20px; /* Add some bottom margin to clear the chatbot FAB */
+        }
+
+        /* Chatbot specific styles */
+        .chatbot-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.2s ease-in-out;
+        }
+        .chatbot-fab:hover {
+            transform: scale(1.05);
+        }
+
+        .chatbot-container {
+            position: fixed;
+            bottom: 100px; /* Above the FAB */
+            right: 30px;
+            width: 350px;
+            height: 500px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 999;
+            transform: translateY(100%); /* Start hidden below screen */
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            pointer-events: none; /* Disable interaction when hidden */
+        }
+        .chatbot-container.show {
+            transform: translateY(0); /* Slide up */
+            opacity: 1;
+            pointer-events: auto; /* Enable interaction when shown */
+        }
+
+        .chatbot-header {
+            background-color: #28a745;
+            color: white;
+            padding: 15px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chatbot-header .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .chat-window {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 85%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            word-wrap: break-word;
+            font-size: 0.95em;
+        }
+        .user-message {
+            background-color: #e0f2f7; /* Light blue */
+            color: #333;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        .bot-message {
+            background-color: #e2e6ea; /* Light grey */
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        .bot-message.quiz-question {
+            background-color: #d1ecf1; /* Info blue */
+            border-left: 5px solid #007bff;
+            padding: 15px;
+        }
+        .bot-message.evaluation {
+            background-color: #d4edda; /* Success green */
+            border-left: 5px solid #28a745;
+            padding: 15px;
+        }
+        .bot-message.evaluation.wrong {
+            background-color: #f8d7da; /* Danger red */
+            border-left: 5px solid #dc3545;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        .chat-input-group input {
+            flex-grow: 1;
+            border-radius: 20px;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+        }
+        .chat-input-group button {
+            border-radius: 20px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .chat-input-group button:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        .loading-indicator {
+            text-align: center;
+            padding: 10px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .quiz-options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .quiz-option-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .quiz-option-item:hover {
+            background-color: #f0f0f0;
+        }
+        .quiz-option-item input[type="radio"] {
+            margin-right: 5px;
+        }
+        .quiz-submit-btn, .quiz-next-btn {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .quiz-score {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -42,48 +240,361 @@
 
     <!-- Page Heading -->
     <div class="container mt-5">
-        <h1 class="text-center text-primary fw-bold"><i class="fas fa-user-circle me-2"></i>Welcome, {{ username }}</h1>
-        <p class="text-center text-secondary">Your personalized quiz dashboard</p>
+        <h1 class="text-center text-primary fw-bold"><i class="fas fa-user-circle me-2"></i>Welcome,<span style="color: #ff6f61;">{{ session.get('username') }}</span></h1>
+        <p class="text-center text-muted">Your personalized quiz dashboard</p>
     </div>
 
     <!-- Quiz Details Section -->
-<div class="container mt-5">
-    <h2 class="text-center text-primary fw-bold mb-4"><i class="fas fa-clipboard-list me-2"></i>Quiz Details</h2>
-    {% if quizes %}
-    <div class="row">
-        {% for quiz in quizes %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow">
-                <div class="card-body">
-                    <h5 class="card-title text-primary"><i class="fas fa-book me-2"></i>{{ quiz.name }}</h5>
-                    <p class="card-text"><i class="fas fa-bookmark me-2"></i>Chapter: {{ quiz.chapter.name }}</p>
-                    <p class="card-text"><i class="fas fa-comment me-2"></i>{{ quiz.remarks }}</p>
-                    <p class="card-text"><i class="far fa-calendar-alt me-2"></i>{{ quiz.date_of_quiz }} | <i class="far fa-clock me-2"></i>{{ quiz.time_of_quiz }} Minutes</p>
-                    {% if quiz.id in scores %}
-                    <div class="alert alert-success" role="alert">
-                        <i class="fas fa-trophy me-2"></i>Your Score: {{ scores[quiz.id] if scores[quiz.id] is not none else 'N/A' }}/{{quiz.questions | length}}
+    <div class="container mt-5">
+        <h2 class="text-center text-primary fw-bold mb-4"><i class="fas fa-clipboard-list me-2"></i>Quiz Details</h2>
+        {% if quizes %}
+        <div class="row">
+            {% for quiz in quizes %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary"><i class="fas fa-book me-2"></i>{{ quiz.name }}</h5>
+                        <p class="card-text"><i class="fas fa-bookmark me-2"></i>Chapter: {{ quiz.chapter.name }}</p>
+                        <p class="card-text"><i class="fas fa-comment me-2"></i>{{ quiz.remarks }}</p>
+                        <p class="card-text"><i class="far fa-calendar-alt me-2"></i>{{ quiz.date_of_quiz }} | <i class="far fa-clock me-2"></i>{{ quiz.time_of_quiz }} Minutes</p>
+                        {% if quiz.id in scores %}
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-trophy me-2"></i>Your Score: {{ scores[quiz.id] if scores[quiz.id] is not none else 'N/A' }}/{{quiz.questions | length}}
+                        </div>
+                        
+                        <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-100"><i class="fas fa-redo me-2"></i>Retake Quiz</a>
+                        {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>You have not taken this quiz yet
+                        </div>
+                        <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary w-100"><i class="fas fa-play me-2"></i>Start Quiz</a>
+                        {% endif %}
                     </div>
-                    
-                    <a href="/start_quiz/{{ quiz.id }}" class="btn btn-warning w-100"><i class="fas fa-redo me-2"></i>Retake Quiz</a>
-                    {% else %}
-                    <div class="alert alert-info" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>You have not taken this quiz yet
-                    </div>
-                    <a href="/start_quiz/{{ quiz.id }}" class="btn btn-primary w-100"><i class="fas fa-play me-2"></i>Start Quiz</a>
-                    {% endif %}
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+        {% else %}
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-circle me-2"></i>No quizzes found for "{{ search_query }}"
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="alert alert-warning text-center">
-        <i class="fas fa-exclamation-circle me-2"></i>No quizzes found for "{{ search_query }}"
+
+    <!-- Floating Chatbot Icon -->
+    <div id="chatbot-fab" class="chatbot-fab">
+        <i class="fas fa-robot"></i>
     </div>
-    {% endif %}
-</div>
+
+    <!-- Chatbot Container -->
+    <div id="chatbot-container" class="chatbot-container">
+        <div class="chatbot-header">
+            AI Quiz Master
+            <button class="close-btn" id="close-chatbot-btn">&times;</button>
+        </div>
+        <div id="chat-window" class="chat-window">
+            <div class="bot-message message">Hello! Enter a subject below and click "New Quiz" to start.</div>
+        </div>
+        <div class="chat-input-group" id="initial-input">
+            <input type="text" id="subject-input" class="form-control rounded-pill" placeholder="e.g., History, Science">
+            <button id="start-quiz-btn" class="btn btn-success rounded-pill">New Quiz</button>
+        </div>
+        <div id="loading-indicator" class="loading-indicator d-none">Generating quiz...</div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM Content Loaded. Initializing chatbot elements.');
+
+            const chatbotFab = document.getElementById('chatbot-fab');
+            const chatbotContainer = document.getElementById('chatbot-container');
+            const closeChatbotBtn = document.getElementById('close-chatbot-btn');
+            const chatWindow = document.getElementById('chat-window');
+            const subjectInput = document.getElementById('subject-input');
+            const startQuizBtn = document.getElementById('start-quiz-btn');
+            const initialInputGroup = document.getElementById('initial-input');
+            const loadingIndicator = document.getElementById('loading-indicator');
+
+            // Log elements to ensure they are found
+            console.log('chatbotFab:', chatbotFab);
+            console.log('chatbotContainer:', chatbotContainer);
+            console.log('closeChatbotBtn:', closeChatbotBtn);
+            console.log('chatWindow:', chatWindow);
+            console.log('subjectInput:', subjectInput);
+            console.log('startQuizBtn:', startQuizBtn);
+            console.log('initialInputGroup:', initialInputGroup);
+            console.log('loadingIndicator:', loadingIndicator);
 
 
+            let currentQuiz = {
+                subject: '',
+                questions: [],
+                currentQuestionIndex: 0,
+                score: 0
+            };
+
+            // Toggle chatbot visibility
+            if (chatbotFab) {
+                chatbotFab.addEventListener('click', () => {
+                    console.log('Chatbot FAB clicked.');
+                    if (chatbotContainer) {
+                        chatbotContainer.classList.toggle('show');
+                        if (chatbotContainer.classList.contains('show')) {
+                            console.log('Chatbot opened. Resetting state.');
+                            resetChatbot();
+                        }
+                    } else {
+                        console.error('Error: chatbotContainer not found.');
+                    }
+                });
+            } else {
+                console.error('Error: chatbotFab not found.');
+            }
+
+            if (closeChatbotBtn) {
+                closeChatbotBtn.addEventListener('click', () => {
+                    console.log('Close chatbot button clicked.');
+                    if (chatbotContainer) {
+                        chatbotContainer.classList.remove('show');
+                    } else {
+                        console.error('Error: chatbotContainer not found for close button.');
+                    }
+                });
+            } else {
+                console.error('Error: closeChatbotBtn not found.');
+            }
+
+            // Function to add a message to the chat window
+            function addMessage(text, sender, className = '') {
+                if (!chatWindow) {
+                    console.error('Error: chatWindow not found for addMessage.');
+                    return;
+                }
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', `${sender}-message`); // Always add these base classes
+                
+                // Split className by spaces and add each class individually
+                if (className) {
+                    className.split(' ').forEach(cls => {
+                        if (cls) { // Ensure the class name is not empty after splitting
+                            messageDiv.classList.add(cls);
+                        }
+                    });
+                }
+                
+                messageDiv.innerHTML = text; // Use innerHTML for potential Markdown/HTML from bot
+                chatWindow.appendChild(messageDiv);
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom
+                console.log(`Added message (${sender}): ${text.substring(0, 50)}...`);
+            }
+
+            // Function to display a quiz question
+            function displayQuestion() {
+                if (!chatWindow) return; // Defensive check
+                chatWindow.innerHTML = ''; // Clear chat window for new quiz
+                addMessage('Great! Here is your quiz on ' + currentQuiz.subject + '.', 'bot');
+
+                const q = currentQuiz.questions[currentQuiz.currentQuestionIndex];
+                if (!q) {
+                    console.log('No more questions to display. Ending quiz.');
+                    displayQuizEnd();
+                    return;
+                }
+
+                const questionHtml = `
+                    <div class="bot-message quiz-question">
+                        <strong>Question ${currentQuiz.currentQuestionIndex + 1}:</strong> ${q.question}<br>
+                        <div class="quiz-options-group">
+                            ${q.options.map((option, index) => `
+                                <label class="quiz-option-item">
+                                    <input type="radio" name="quizOption" value="${option}" id="option${index}">
+                                    ${option}
+                                </label>
+                            `).join('')}
+                        </div>
+                        <button class="btn btn-primary quiz-submit-btn rounded-pill" data-question-index="${currentQuiz.currentQuestionIndex}">Submit Answer</button>
+                    </div>
+                `;
+                addMessage(questionHtml, 'bot', 'quiz-question');
+
+                // Attach event listener to the newly created submit button
+                const submitBtn = document.querySelector('.quiz-submit-btn');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', handleSubmitAnswer);
+                } else {
+                    console.error('Error: Submit button not found after displaying question.');
+                }
+            }
+
+            // Handles submitting an answer to the backend for evaluation
+            async function handleSubmitAnswer(event) {
+                console.log('Submit Answer button clicked.');
+                const selectedOption = document.querySelector('input[name="quizOption"]:checked');
+                if (!selectedOption) {
+                    addMessage('Please select an option before submitting.', 'bot');
+                    return;
+                }
+
+                const userAnswer = selectedOption.value;
+                const q = currentQuiz.questions[currentQuiz.currentQuestionIndex];
+                const correctAnswer = q.correct_answer; // This comes from the backend generated questions
+
+                addMessage(`You answered: ${userAnswer}`, 'user');
+                if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+                console.log('Sending answer to backend for evaluation...');
+
+                try {
+                    const response = await fetch('/evaluate_answer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            question: q.question,
+                            user_answer: userAnswer,
+                            correct_answer: correctAnswer,
+                            subject: currentQuiz.subject
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                    }
+
+                    const data = await response.json();
+                    const isCorrect = data.is_correct;
+                    const explanation = data.explanation;
+
+                    if (isCorrect) {
+                        currentQuiz.score++;
+                        addMessage(`<strong>Correct!</strong> ${explanation}`, 'bot', 'evaluation');
+                    } else {
+                        addMessage(`<strong>Wrong!</strong> The correct answer was: ${correctAnswer}. ${explanation}`, 'bot', 'evaluation wrong');
+                    }
+
+                    const nextBtnHtml = `<button class="btn btn-info quiz-next-btn rounded-pill">Next Question</button>`;
+                    addMessage(nextBtnHtml, 'bot');
+                    const nextBtn = document.querySelector('.quiz-next-btn');
+                    if (nextBtn) {
+                        nextBtn.addEventListener('click', handleNextQuestion);
+                    } else {
+                        console.error('Error: Next Question button not found after evaluation.');
+                    }
+
+                } catch (error) {
+                    console.error('Error evaluating answer:', error);
+                    addMessage(`Oops! Could not evaluate your answer. Error: ${error.message}. Please try again.`, 'bot');
+                } finally {
+                    if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                }
+            }
+
+            // Move to the next question or end the quiz
+            function handleNextQuestion() {
+                console.log('Next Question button clicked.');
+                currentQuiz.currentQuestionIndex++;
+                if (currentQuiz.currentQuestionIndex < currentQuiz.questions.length) {
+                    displayQuestion();
+                } else {
+                    displayQuizEnd();
+                }
+            }
+
+            // Display quiz end message and score
+            function displayQuizEnd() {
+                if (!chatWindow) return; // Defensive check
+                chatWindow.innerHTML = ''; // Clear previous content
+                addMessage(`Quiz finished! You scored ${currentQuiz.score} out of ${currentQuiz.questions.length}.`, 'bot');
+                addMessage('Click "New Quiz" to start another one!', 'bot');
+                if (initialInputGroup) initialInputGroup.style.display = 'flex'; // Show subject input again
+                console.log('Quiz ended. Displaying score and resetting for new quiz.');
+            }
+
+            // Reset chatbot to initial state
+            function resetChatbot() {
+                if (!chatWindow) return; // Defensive check
+                chatWindow.innerHTML = '<div class="bot-message message">Hello! Enter a subject below and click "New Quiz" to start.</div>';
+                if (subjectInput) subjectInput.value = '';
+                if (initialInputGroup) initialInputGroup.style.display = 'flex'; // Ensure subject input is visible
+                currentQuiz = {
+                    subject: '',
+                    questions: [],
+                    currentQuestionIndex: 0,
+                    score: 0
+                };
+                console.log('Chatbot state reset.');
+            }
+
+            // Handles starting a new quiz
+            if (startQuizBtn) {
+                startQuizBtn.addEventListener('click', async () => {
+                    console.log('Start Quiz button clicked.');
+                    const subject = subjectInput ? subjectInput.value.trim() : '';
+                    if (subject === '') {
+                        addMessage('Please enter a subject to start the quiz.', 'bot');
+                        console.log('Subject input is empty. Not sending request.');
+                        return;
+                    }
+
+                    currentQuiz.subject = subject;
+                    if (initialInputGroup) initialInputGroup.style.display = 'none'; // Hide subject input
+                    if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+                    if (chatWindow) chatWindow.innerHTML = ''; // Clear previous messages
+                    addMessage(`Generating 5 MCQs on ${subject}...`, 'bot');
+                    console.log(`Attempting to generate quiz for subject: "${subject}"`);
+
+                    try {
+                        const response = await fetch('/generate_quiz', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ subject: subject })
+                        });
+
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                        }
+
+                        const data = await response.json();
+                        console.log('Received response from /generate_quiz:', data);
+
+                        if (data.questions && data.questions.length > 0) {
+                            currentQuiz.questions = data.questions;
+                            currentQuiz.currentQuestionIndex = 0;
+                            currentQuiz.score = 0;
+                            displayQuestion();
+                        } else {
+                            addMessage('Sorry, I could not generate a quiz for that subject. Please try another one. The AI might not have returned valid questions.', 'bot');
+                            if (initialInputGroup) initialInputGroup.style.display = 'flex'; // Show subject input again
+                            console.log('AI returned no questions or invalid format.');
+                        }
+                    } catch (error) {
+                        console.error('Error generating quiz:', error);
+                        addMessage(`Oops! Failed to generate quiz. Error: ${error.message}. Please check your API key and backend logs.`, 'bot');
+                        if (initialInputGroup) initialInputGroup.style.display = 'flex'; // Show subject input again
+                    } finally {
+                        if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                        console.log('Quiz generation attempt finished.');
+                    }
+                });
+            } else {
+                console.error('Error: startQuizBtn not found.');
+            }
+
+            // Allow pressing Enter in subject input to start quiz
+            if (subjectInput) {
+                subjectInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        console.log('Enter key pressed in subject input.');
+                        if (startQuizBtn) startQuizBtn.click();
+                    }
+                });
+            } else {
+                console.error('Error: subjectInput not found for keypress listener.');
+            }
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

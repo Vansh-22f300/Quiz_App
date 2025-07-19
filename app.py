@@ -6,6 +6,16 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+from flask_cors import CORS
+from dotenv import load_dotenv # Import load_dotenv
+
+# app.py
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS # Required for cross-origin requests if frontend is separate
+import requests # <--- IMPORTANT: This line ensures the 'requests' library is available.
+import os
+import json # Import json module for parsing structured responses
+
 matplotlib.use('Agg')
 from werkzeug.security import generate_password_hash,check_password_hash
 def create_app():
@@ -568,7 +578,223 @@ def edit_profile():
         db.session.commit()
         return redirect(url_for('profile'))
     return render_template('edit_profile.html',user=user)
-import os
+
+load_dotenv()
+CORS(app) # Enable CORS for all routes
+
+# IMPORTANT: Retrieve your Gemini API Key from environment variables
+# This is secure for deployment and works well with python-dotenv for local development.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Add a check to ensure the API key is set
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable not set. Please set it in a .env file or your system environment.")
+
+# Gemini API endpoint for gemini-2.0-flash
+GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+
+@app.route('/generate_quiz', methods=['POST'])
+def generate_quiz():
+    """
+    Generates 5 multiple-choice questions (MCQs) on a given subject
+    using the Gemini API.
+    """
+    subject = request.json.get('subject')
+    if not subject:
+        return jsonify({"error": "No subject provided"}), 400
+
+    # Define a list of allowed educational subjects
+    # You can expand this list as needed
+    allowed_subjects = [
+        "history", "science", "mathematics", "maths", "literature", "geography",
+        "physics", "chemistry", "biology", "computer science", "art history",
+        "economics", "political science", "psychology", "sociology", "philosophy",
+        "dbms", "sst", "social studies"
+    ]
+
+    # Convert the requested subject to lowercase for case-insensitive comparison
+    normalized_subject = subject.lower()
+
+    # Check if the requested subject is in the allowed list
+    if normalized_subject not in allowed_subjects:
+        return jsonify({
+            "error": f"I can only generate quizzes on educational subjects. '{subject}' is not an allowed subject. Please try a topic like History, Science, or Mathematics."
+        }), 400 # Use 400 Bad Request for client-side input validation failure
+
+    # Modified Prompt: Explicitly ask for educational subjects (removed conditional error message instruction as it's handled by backend now)
+    prompt = f"""Generate 5 multiple-choice questions about {subject}.
+    For each question, provide:
+    1. The question text.
+    2. Four options (A, B, C, D).
+    3. The correct answer among the options.
+
+    Format the output as a JSON array of objects, where each object has:
+    - "question": string
+    - "options": array of strings (4 options)
+    - "correct_answer": string (the correct option text)
+
+    Example of valid format:
+    [
+      {{
+        "question": "What is the capital of France?",
+        "options": ["Berlin", "Madrid", "Paris", "Rome"],
+        "correct_answer": "Paris"
+      }},
+      {{
+        "question": "Which planet is known as the Red Planet?",
+        "options": ["Earth", "Mars", "Jupiter", "Venus"],
+        "correct_answer": "Mars"
+      }}
+    ]
+    """
+
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 1024,
+            "responseMimeType": "application/json", # Request JSON output
+            "responseSchema": { # Only define the successful quiz response schema
+                "type": "ARRAY",
+                "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "question": {"type": "STRING"},
+                        "options": {
+                            "type": "ARRAY",
+                            "items": {"type": "STRING"}
+                        },
+                        "correct_answer": {"type": "STRING"}
+                    },
+                    "required": ["question", "options", "correct_answer"]
+                }
+            }
+        }
+    }
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        # This is a comment to force Flask reloader to pick up changes
+        response = requests.post(GEMINI_API_URL, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        gemini_response = response.json()
+        
+        if gemini_response and 'candidates' in gemini_response and \
+           len(gemini_response['candidates']) > 0 and \
+           'content' in gemini_response['candidates'][0] and \
+           'parts' in gemini_response['candidates'][0]['content'] and \
+           len(gemini_response['candidates'][0]['content']['parts']) > 0 and \
+           'text' in gemini_response['candidates'][0]['content']['parts'][0]:
+            
+            quiz_data_str = gemini_response['candidates'][0]['content']['parts'][0]['text']
+            try:
+                parsed_response = json.loads(quiz_data_str)
+                
+                # Now, we only expect a list of questions. If it's not, it's an AI generation issue.
+                if isinstance(parsed_response, list) and len(parsed_response) >= 5:
+                    return jsonify({"questions": parsed_response[:5]}) # Return only 5 questions
+                else:
+                    print(f"Generated quiz data is not a list of 5+ questions: {parsed_response}")
+                    return jsonify({"error": "Failed to generate enough questions or invalid format from AI. Please try again or a different subject."}), 500
+            except json.JSONDecodeError as e:
+                print(f"JSON decoding error: {e} - Raw response: {quiz_data_str}")
+                return jsonify({"error": "Failed to parse quiz data from AI. Invalid JSON format."}), 500
+        else:
+            print(f"Unexpected Gemini response structure for quiz generation: {gemini_response}")
+            return jsonify({"error": "Could not generate quiz. AI response format unexpected."}), 500
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling Gemini API for quiz generation: {e}")
+        return jsonify({"error": "Failed to connect to AI service for quiz generation. Check API key or network."}), 500
+    except Exception as e:
+        print(f"An unexpected error occurred during quiz generation: {e}")
+        return jsonify({"error": "An internal server error occurred during quiz generation."}), 500
+
+@app.route('/evaluate_answer', methods=['POST'])
+def evaluate_answer():
+    """
+    Evaluates a user's answer for an MCQ and provides a 2-line explanation
+    using the Gemini API.
+    """
+    data = request.json
+    user_answer = data.get('user_answer')
+    correct_answer = data.get('correct_answer')
+    question = data.get('question')
+    subject = data.get('subject')
+
+    if not all([user_answer, correct_answer, question, subject]):
+        return jsonify({"error": "Missing data for evaluation"}), 400
+
+    is_correct = (user_answer == correct_answer)
+
+    # Prompt for evaluation and explanation
+    prompt = f"""The user answered the following question about {subject}:
+    Question: "{question}"
+    User's answer: "{user_answer}"
+    Correct answer: "{correct_answer}"
+
+    Based on whether the user's answer is correct or wrong, provide a concise 2-line explanation.
+    If the answer is correct, explain why it's correct.
+    If the answer is wrong, explain why it's wrong and briefly elaborate on the correct answer.
+    Do NOT explicitly state "Correct!" or "Wrong!" in the explanation itself.
+    """
+
+    payload = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 100 # Keep explanation concise
+        }
+    }
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        response = requests.post(GEMINI_API_URL, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        gemini_response = response.json()
+        
+        explanation_text = "No explanation available."
+        if gemini_response and 'candidates' in gemini_response and \
+           len(gemini_response['candidates']) > 0 and \
+           'content' in gemini_response['candidates'][0] and \
+           'parts' in gemini_response['candidates'][0]['content'] and \
+           len(gemini_response['candidates'][0]['content']['parts']) > 0 and \
+           'text' in gemini_response['candidates'][0]['content']['parts'][0]:
+            
+            explanation_text = gemini_response['candidates'][0]['content']['parts'][0]['text']
+        else:
+            print(f"Unexpected Gemini response structure for explanation: {gemini_response}")
+
+        return jsonify({
+            "is_correct": is_correct,
+            "explanation": explanation_text
+        })
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error calling Gemini API for evaluation: {e}")
+        return jsonify({"error": "Failed to connect to AI service for evaluation"}), 500
+    except Exception as e:
+        print(f"An unexpected error occurred during evaluation: {e}")
+        return jsonify({"error": "An internal server error occurred during evaluation."}), 500
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Render sets this environment variable
